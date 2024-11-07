@@ -1,9 +1,6 @@
 // src/Main.java
 
-import ExonSkipping.CDS;
-import ExonSkipping.Gene;
-import ExonSkipping.Genome;
-import ExonSkipping.Transcript;
+import ExonSkipping.*;
 import Utils.CmdParser;
 import Utils.Parser;
 
@@ -20,15 +17,28 @@ public class Main {
 
         parser.parse(args);
         Parser gtfParser = new Parser();
-        Genome genome = gtfParser.parseGenome(parser.getArgumentValue("-gtf"));
-        genome.getExonSkippingEvents(parser.getArgumentValue("-o"));
-        /*for (Map.Entry<String, Transcript> entry : transcripts.entrySet()) {
-            Transcript transcript = entry.getValue();
-            //System.out.println("Transcript ID: " + transcript.getTranscriptId());
-            for (int i = 0; i < transcript.getCodingSequences().size(); i++) {
-                System.out.println("CDS " + i + ": " + transcript.getCodingSequences().get(i).getStart() + " - " + transcript.getCodingSequences().get(i).getEnd());
-            }
-        }*/
 
+        ArrayList<Long> gtfcds = new ArrayList<>();
+        ArrayList<Long> eventsTime = new ArrayList<>();
+        ArrayList<Long> write = new ArrayList<>();
+
+        long startTime = System.currentTimeMillis();
+        Genome genome = gtfParser.parseGenome(parser.getArgumentValue("-gtf"));
+        long endTime = System.currentTimeMillis();
+        gtfcds.add(endTime - startTime);
+
+        startTime = System.currentTimeMillis();
+        ArrayList<ExonSkippingEvent> events = genome.getExonSkippingEvents();
+        endTime = System.currentTimeMillis();
+        eventsTime.add(endTime - startTime);
+
+        startTime = System.currentTimeMillis();
+        Genome.writeToFile(events, parser.getArgumentValue("-o"));
+        endTime = System.currentTimeMillis();
+        write.add(endTime - startTime);
+
+        //System.out.println(gtfcds.stream().mapToLong(x -> x).sum() / gtfcds.size());
+        //System.out.println(eventsTime.stream().mapToLong(x -> x).sum() / gtfcds.size());
+        //System.out.println(write.stream().mapToLong(x -> x).sum() / gtfcds.size());
     }
 }

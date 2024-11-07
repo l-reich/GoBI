@@ -27,13 +27,14 @@ public class Genome {
         }
     }
 
-    public void getExonSkippingEvents(String filepath) {
+    public ArrayList<ExonSkippingEvent> getExonSkippingEvents() {
         ArrayList<ExonSkippingEvent> exonSkippingEvents = new ArrayList<>();
         for (Gene gene : genes) {
             ArrayList<ExonSkippingEvent> geneEvents = gene.getEvents();
             exonSkippingEvents.addAll(geneEvents);
         }
-        writeToFile(exonSkippingEvents, filepath);
+        return exonSkippingEvents;
+        //writeToFile(exonSkippingEvents, filepath);
     }
 
     public static void writeToFile(ArrayList<ExonSkippingEvent> events, String filepath) {

@@ -140,7 +140,7 @@ public class Gene {
                         minB = b;
                     }
                 }
-                exonSkippingEvents.add(new ExonSkippingEvent(geneId, geneName, chromosome, strand, codingSequences.size(), intron, wtIntrons, sv, wtStart, maxE, minE, maxB, minB));
+                exonSkippingEvents.add(new ExonSkippingEvent(geneId, geneName, chromosome, strand, codingSequences.size(), intron, wtIntrons, sv, wtStart, minE, maxE, minB, maxB));
             }
 
         }
