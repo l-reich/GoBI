@@ -13,6 +13,14 @@ public class Exon {
         return start;
     }
 
+    public void setStart(int start) {
+        this.start = start;
+    }
+
+    public void setEnd(int end) {
+        this.end = end;
+    }
+
     public int getEnd() {
         return end;
     }

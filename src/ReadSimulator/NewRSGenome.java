@@ -6,10 +6,10 @@ import java.util.*;
 //import org.apache.commons.math4.distribution.NormalDistribution;
 
 
-public class RSGenome {
+public class NewRSGenome {
     private HashMap<String, Gene> genes;
 
-    public RSGenome() {
+    public NewRSGenome() {
         this.genes = new HashMap<>();
     }
 
@@ -74,8 +74,8 @@ public class RSGenome {
                     int startPos = random.nextInt(finalSequence.length() - fragmentLength + 1);
 
 
-                    //startPos = 1917;
-                    //fragmentLength = 175;
+                    //startPos = 1734;
+                    //fragmentLength = 208;
                     String fragmentSequence = finalSequence.substring(startPos, startPos + fragmentLength);
 
 
@@ -176,6 +176,8 @@ public class RSGenome {
                         } else {
                             currentPos = exon.getStart() + count - (gesLength - exonLength);
 
+
+
                             if (gesLength - count >= readLength) {
                                 forwardGenomicRegion.add(new Exon(currentPos, currentPos + readLength));
                                 break;
@@ -183,22 +185,8 @@ public class RSGenome {
                                 if (currentPos <= exon.getEnd()) {
                                     forwardGenomicRegion.add(new Exon(currentPos, exon.getEnd() + 1));
                                 }
-                                Exon next = transcript.getExons().get(j + 1);
-                                int nextLength = next.getEnd() - next.getStart() + 1;
-                                int remaining = readLength - (gesLength - count);
-
-                                if (nextLength >= remaining) {
-                                    forwardGenomicRegion.add(new Exon(next.getStart() - 1 + 1, next.getStart() + remaining));
-                                    break;
-                                } else {
-                                    forwardGenomicRegion.add(new Exon(next.getStart() - 1 + 1, next.getStart() + nextLength));
-                                    remaining -= nextLength;
-                                    Exon next2 = transcript.getExons().get(j + 2);
-                                    forwardGenomicRegion.add(new Exon(next2.getStart(), next2.getStart() + remaining));
-                                    break;
-                                }
-                                //forwardGenomicRegion.add(new Exon(transcript.getExons().get(j + 1).getStart() - 1 + 1, transcript.getExons().get(j + 1).getStart() + readLength - (gesLength - count)));
-                                //break;
+                                forwardGenomicRegion.add(new Exon(transcript.getExons().get(j + 1).getStart() - 1 + 1, transcript.getExons().get(j + 1).getStart() + readLength - (gesLength - count)));
+                                break;
                             }
                         }
                     }
@@ -224,6 +212,7 @@ public class RSGenome {
                     int transcriptEnd = transcript.getExons().get(transcript.getExons().size() - 1).getEnd();
                     int remainingLengthRev = readLength + 1;
                     int currentPosRev = 0;
+
 
                     /*int revCount = finalSequence.length() - (startPos + fragmentLength - 1);
                     gesLength = 0;
@@ -321,30 +310,12 @@ public class RSGenome {
                     }
                     if (!isNegativeStrand) {
                         reverseGenomicRegion = reverseGenomicRegion.reversed();
-                        if (reverseGenomicRegion.size() == 3) {
-                            Exon first = reverseGenomicRegion.get(0);
-                            Exon second = reverseGenomicRegion.get(1);
-                            first.setStart(first.getStart() + 1);
-                            second.setEnd(second.getEnd() + 1);
-                            if (first.getStart() == first.getEnd()) {
-                                reverseGenomicRegion.remove(0);
-                            }
-                        }
                     }
 
-                    if (isNegativeStrand) {
+                    if (isNegativeStrand){
                         List<Exon> temp = forwardGenomicRegion;
-                        forwardGenomicRegion = reverseGenomicRegion.reversed();
+                        forwardGenomicRegion = reverseGenomicRegion;
                         reverseGenomicRegion = temp;
-                        if (forwardGenomicRegion.size() == 3) {
-                            Exon first = forwardGenomicRegion.get(0);
-                            Exon second = forwardGenomicRegion.get(1);
-                            first.setStart(first.getStart() + 1);
-                            second.setEnd(second.getEnd() + 1);
-                            if (first.getStart() == first.getEnd()) {
-                                forwardGenomicRegion.remove(0);
-                            }
-                        }
                     }
 
 

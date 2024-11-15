@@ -9,6 +9,7 @@ public class Gene {
     private int end;
     private String strand;
     private String chromosome;
+    private String sequence;
     private List<ReadSimulator.Transcript> transcripts;
 
     public Gene(String geneId, int start, int end, String strand, String chromosome) {
@@ -58,6 +59,14 @@ public class Gene {
 
     public void setStart(int start) {
         this.start = start;
+    }
+
+    public String getSequence() {
+        return sequence;
+    }
+
+    public void setSequence(String sequence) {
+        this.sequence = sequence;
     }
 
     public List<ReadSimulator.Transcript> getTranscripts() {

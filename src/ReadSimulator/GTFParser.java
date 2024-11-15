@@ -36,9 +36,11 @@ public class GTFParser {
                         }
                     } else if ("exon".equals(featureType) && currentGene != null && geneId.equals(currentGene.getGeneId())) {
                         if (transcriptId != null) {
-                            Transcript transcript = getOrCreateTranscript(currentGene, transcriptId);
-                            Exon exon = new Exon(Integer.parseInt(columns[3]), Integer.parseInt(columns[4]));
-                            transcript.addExon(exon);
+                            if (geneTranscriptCounts.containsKey(geneId) && geneTranscriptCounts.get(geneId).containsKey(transcriptId)) {
+                                Transcript transcript = getOrCreateTranscript(currentGene, transcriptId);
+                                Exon exon = new Exon(Integer.parseInt(columns[3]), Integer.parseInt(columns[4]));
+                                transcript.addExon(exon);
+                            }
                         }
                     }
                 }

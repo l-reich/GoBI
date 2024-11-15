@@ -21,6 +21,10 @@ public class Transcript {
         this.exons.add(exon);
     }
 
+    public void setExons(List<Exon> exons) {
+        this.exons = exons;
+    }
+
     public List<Exon> getExons() {
         return exons;
     }

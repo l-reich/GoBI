@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-public class RSMain {
+public class RSTest {
     public static void main(String[] args) throws IOException {
         CmdParser parser = new CmdParser();
         parser.declareArgument("-gtf");
@@ -37,10 +37,9 @@ public class RSMain {
 
         genome.getGeneSequences(fastaFile, idxFile);
 
-        /*RSGenome test = new RSGenome();
-        test.addGene("ENSG00000140009", genome.getGenes().get("ENSG00000140009"));
-        test.addGene("ENSG00000130775", genome.getGenes().get("ENSG00000130775"));
-        test.addGene("ENSG00000147082", genome.getGenes().get("ENSG00000147082"));*/
+        RSGenome test = new RSGenome();
+        test.addGene("ENSG00000160767", genome.getGenes().get("ENSG00000160767"));
+        //test.addGene("ENSG00000232339", genome.getGenes().get("ENSG00000232339"));
 
 
 
@@ -48,7 +47,7 @@ public class RSMain {
         String mutationRateStr = parser.getArgumentValue("-mutationrate").replace("%", "").trim();
         double mutationRate = Double.parseDouble(mutationRateStr) / 100.0;
 
-        ArrayList<Read> reads = genome.getReads(
+        ArrayList<Read> reads = test.getReads(
                 Double.parseDouble(parser.getArgumentValue("-frlength")),
                 Double.parseDouble(parser.getArgumentValue("-SD")),
                 Integer.parseInt(parser.getArgumentValue("-length")),

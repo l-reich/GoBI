@@ -55,34 +55,9 @@ public class GenomeSequenceExtractor {
 
         String seq = sequence.toString();
         if (!strand) {
-            seq = getReverseComplement(seq);
+            //seq = getReverseComplement(seq);
         }
 
         return seq;
-    }
-
-    private String getReverseComplement(String sequence) {
-        StringBuilder reverseComplement = new StringBuilder();
-        for (int i = sequence.length() - 1; i >= 0; i--) {
-            char base = sequence.charAt(i);
-            switch (base) {
-                case 'A':
-                    reverseComplement.append('T');
-                    break;
-                case 'T':
-                    reverseComplement.append('A');
-                    break;
-                case 'C':
-                    reverseComplement.append('G');
-                    break;
-                case 'G':
-                    reverseComplement.append('C');
-                    break;
-                default:
-                    reverseComplement.append(base);
-                    break;
-            }
-        }
-        return reverseComplement.toString();
     }
 }
