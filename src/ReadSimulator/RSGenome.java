@@ -3,6 +3,10 @@ package ReadSimulator;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 //import org.apache.commons.math4.distribution.NormalDistribution;
 
 
@@ -73,11 +77,7 @@ public class RSGenome {
 
                     int startPos = random.nextInt(finalSequence.length() - fragmentLength + 1);
 
-
-                    //startPos = 1917;
-                    //fragmentLength = 175;
                     String fragmentSequence = finalSequence.substring(startPos, startPos + fragmentLength);
-
 
                     // Generate forward and reverse reads
                     String forwardRead = fragmentSequence.substring(0, Math.min(readLength, fragmentSequence.length()));
@@ -202,7 +202,6 @@ public class RSGenome {
                             }
                         }
                     }
-
                     /*int transcriptStart = transcript.getExons().get(0).getStart();
                     int remainingLength = readLength + 1;
                     int currentPos = transcriptStart;
@@ -219,12 +218,10 @@ public class RSGenome {
                             break;
                         }
                     }*/
-
                     // Calculate currentPosRev for reverse strand
                     int transcriptEnd = transcript.getExons().get(transcript.getExons().size() - 1).getEnd();
                     int remainingLengthRev = readLength + 1;
                     int currentPosRev = 0;
-
                     /*int revCount = finalSequence.length() - (startPos + fragmentLength - 1);
                     gesLength = 0;
                     for (int j = transcript.getExons().size() - 1; j >= 0; j--) {
@@ -346,7 +343,6 @@ public class RSGenome {
                             }
                         }
                     }
-
 
                     Exon forwardTranscriptRegion = new Exon(startPos, startPos + readLength);
                     Exon reverseTranscriptRegion = new Exon(startPos + fragmentLength - readLength, startPos + fragmentLength);
@@ -656,5 +652,233 @@ public class RSGenome {
             plusExons.add(new Exon(newStart, newEnd));
         }
         return plusExons.reversed();
+    }
+
+    public List<Read> getReadsForGene(int id, Gene gene, double mean, double sd, int readLength, double mutationRate, HashMap<String, HashMap<String, Integer>> geneTranscriptCounts) {
+
+        ArrayList<Read> reads = new ArrayList<>();
+        Random random = new Random();
+        int i = id;
+
+        boolean isNegativeStrand = gene.getStrand().equals("-");
+        if (isNegativeStrand) {
+            for (Transcript transcript : gene.getTranscripts()) {
+                //Collections.reverse(transcript.getExons());
+                transcript.setExons(transcript.getExons().reversed());
+            }
+        }
+
+        for (Transcript transcript : gene.getTranscripts()) {
+            StringBuilder transcriptSequence = new StringBuilder();
+            for (Exon exon : transcript.getExons()) {
+                String exonSequence = gene.getSequence().substring(exon.getStart() - gene.getStart(), exon.getEnd() - gene.getStart() + 1);
+                transcriptSequence.append(exonSequence);
+            }
+            String finalSequence;
+            if (isNegativeStrand) {
+                finalSequence = getReverseComplement(transcriptSequence.toString());
+            } else {
+                finalSequence = transcriptSequence.toString();
+            }
+
+            // Get the number of reads to generate for this transcript
+            int numReads = geneTranscriptCounts.get(gene.getGeneId()).get(transcript.getTranscriptId());
+
+            for (int n = 0; n < numReads; n++) {
+                int fragmentLength;
+                do {
+                    fragmentLength = (int) Math.max(1, random.nextGaussian() * sd + mean);
+                } while (fragmentLength < readLength || fragmentLength > finalSequence.length());
+
+                int startPos = random.nextInt(finalSequence.length() - fragmentLength + 1);
+
+                String fragmentSequence = finalSequence.substring(startPos, startPos + fragmentLength);
+
+                // Generate forward and reverse reads
+                String forwardRead = fragmentSequence.substring(0, Math.min(readLength, fragmentSequence.length()));
+                String reverseRead = getReverseComplement(fragmentSequence.substring(Math.max(0, fragmentSequence.length() - readLength)));
+
+                // Simulate mutations
+                StringBuilder mutatedForwardRead = new StringBuilder(forwardRead);
+                StringBuilder mutatedReverseRead = new StringBuilder(reverseRead);
+                ArrayList<Integer> mutatedPositionsFw = new ArrayList<>();
+                ArrayList<Integer> mutatedPositionsRw = new ArrayList<>();
+
+                for (int j = 0; j < forwardRead.length(); j++) {
+                    if (random.nextDouble() < mutationRate) {
+                        char originalBase = forwardRead.charAt(j);
+                        char mutatedBase = mutateBase(originalBase, random);
+                        mutatedForwardRead.setCharAt(j, mutatedBase);
+                        mutatedPositionsFw.add(j);
+                    }
+                }
+
+                for (int j = 0; j < reverseRead.length(); j++) {
+                    if (random.nextDouble() < mutationRate) {
+                        char originalBase = reverseRead.charAt(j);
+                        char mutatedBase = mutateBase(originalBase, random);
+                        mutatedReverseRead.setCharAt(j, mutatedBase);
+                        mutatedPositionsRw.add(j);
+                    }
+                }
+                List<Exon> forwardGenomicRegion = new ArrayList<>();
+                List<Exon> reverseGenomicRegion = new ArrayList<>();
+                int newPos = startPos;
+
+                if (isNegativeStrand) {
+                    newPos = finalSequence.length() - (startPos + fragmentLength);
+                }
+
+                int transcriptStart = transcript.getExons().get(0).getStart();
+                int remainingLength = readLength + 1;
+                int currentPos = transcriptStart;
+
+                int count = newPos;
+                int gesLength = 0;
+                for (int j = 0; j < transcript.getExons().size(); j++) {
+                    Exon exon = transcript.getExons().get(j);
+                    int exonLength = exon.getEnd() - exon.getStart() + 1;
+                    gesLength += exonLength;
+
+                    if (count > gesLength) {
+                    } else {
+                        currentPos = exon.getStart() + count - (gesLength - exonLength);
+
+                        if (gesLength - count >= readLength) {
+                            forwardGenomicRegion.add(new Exon(currentPos, currentPos + readLength));
+                            break;
+                        } else {
+                            if (currentPos <= exon.getEnd()) {
+                                forwardGenomicRegion.add(new Exon(currentPos, exon.getEnd() + 1));
+                            }
+                            Exon next = transcript.getExons().get(j + 1);
+                            int nextLength = next.getEnd() - next.getStart() + 1;
+                            int remaining = readLength - (gesLength - count);
+
+                            if (nextLength >= remaining) {
+                                forwardGenomicRegion.add(new Exon(next.getStart() - 1 + 1, next.getStart() + remaining));
+                                break;
+                            } else {
+                                forwardGenomicRegion.add(new Exon(next.getStart() - 1 + 1, next.getStart() + nextLength));
+                                remaining -= nextLength;
+                                Exon next2 = transcript.getExons().get(j + 2);
+                                forwardGenomicRegion.add(new Exon(next2.getStart(), next2.getStart() + remaining));
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                int transcriptEnd = transcript.getExons().get(transcript.getExons().size() - 1).getEnd();
+                int remainingLengthRev = readLength + 1;
+                int currentPosRev = 0;
+                    /*int revCount = finalSequence.length() - (startPos + fragmentLength - 1);
+                    gesLength = 0;
+                    for (int j = transcript.getExons().size() - 1; j >= 0; j--) {
+                        Exon exon = transcript.getExons().get(j);
+                        int exonLength = exon.getEnd() - exon.getStart() + 1;
+                        gesLength += exonLength;
+                        if (revCount <= gesLength) {
+                            currentPosRev = exon.getEnd() - (revCount - (gesLength - exonLength));
+                            if (gesLength - revCount >= readLength) {
+                                reverseGenomicRegion.add(new Exon(currentPosRev - readLength + 1, currentPosRev-1));
+                                break;
+                            } else {
+                                if (currentPosRev >= exon.getStart()) {
+                                    reverseGenomicRegion.add(new Exon(exon.getStart(), currentPosRev-1));
+                                }
+                                reverseGenomicRegion.add(new Exon(transcript.getExons().get(j - 1).getEnd() - readLength + 1, transcript.getExons().get(j - 1).getEnd()-1));
+                                break;
+                            }
+                        }
+                    }*/
+                int revCount = finalSequence.length() - (startPos + fragmentLength - 1 + 1);
+                if (isNegativeStrand) {
+                    revCount = startPos;
+                }
+                gesLength = 0;
+                for (int j = transcript.getExons().size() - 1; j >= 0; j--) {
+                    Exon exon = transcript.getExons().get(j);
+                    int exonLength = exon.getEnd() - exon.getStart() + 1;
+                    gesLength += exonLength;
+                    if (revCount < gesLength) {
+                        currentPosRev = 1 + exon.getEnd() - (revCount - (gesLength - exonLength));
+                        break;
+                    }
+                }
+
+                Boolean addedRev = false;
+
+                for (int j = transcript.getExons().size() - 1; j >= 0; j--) {
+                    Exon exon = transcript.getExons().get(j);
+                    if (addedRev) currentPosRev = exon.getEnd();
+                    if (exon.getStart() <= currentPosRev) { //+3
+                        if (exon.getStart() <= currentPosRev - remainingLengthRev + 1) {
+                            if (addedRev) {
+                                if (remainingLengthRev > 0) {
+                                    reverseGenomicRegion.add(new Exon(exon.getEnd() + 1 + 1 - remainingLengthRev, exon.getEnd() + 1));
+                                    break;
+                                }
+                            } else {
+                                reverseGenomicRegion.add(new Exon(currentPosRev + 1 - remainingLengthRev, currentPosRev));
+                                break;
+                            }
+                        } else {
+                            reverseGenomicRegion.add(new Exon(exon.getStart(), currentPosRev + 1 - 1));
+                            remainingLengthRev -= (currentPosRev - exon.getStart());
+                            addedRev = true;
+                        }
+                    }
+                }
+                if (!isNegativeStrand) {
+                    reverseGenomicRegion = reverseGenomicRegion.reversed();
+                    if (reverseGenomicRegion.size() == 3) {
+                        Exon first = reverseGenomicRegion.get(0);
+                        Exon second = reverseGenomicRegion.get(1);
+                        first.setStart(first.getStart() + 1);
+                        second.setEnd(second.getEnd() + 1);
+                        if (first.getStart() == first.getEnd()) {
+                            reverseGenomicRegion.remove(0);
+                        }
+                    }
+                }
+
+                if (isNegativeStrand) {
+                    List<Exon> temp = forwardGenomicRegion;
+                    forwardGenomicRegion = reverseGenomicRegion.reversed();
+                    reverseGenomicRegion = temp;
+                    if (forwardGenomicRegion.size() == 3) {
+                        Exon first = forwardGenomicRegion.get(0);
+                        Exon second = forwardGenomicRegion.get(1);
+                        first.setStart(first.getStart() + 1);
+                        second.setEnd(second.getEnd() + 1);
+                        if (first.getStart() == first.getEnd()) {
+                            forwardGenomicRegion.remove(0);
+                        }
+                    }
+                }
+
+                Exon forwardTranscriptRegion = new Exon(startPos, startPos + readLength);
+                Exon reverseTranscriptRegion = new Exon(startPos + fragmentLength - readLength, startPos + fragmentLength);
+
+                Read read = new Read(
+                        String.valueOf(i), // Replace with actual read ID
+                        gene.getChromosome(),
+                        gene.getGeneId(),
+                        transcript.getTranscriptId(),
+                        mutatedForwardRead.toString(), // forwardRead
+                        mutatedReverseRead.toString(), // reverseRead
+                        forwardGenomicRegion, // forwardGenomicRegion
+                        reverseGenomicRegion, // reverseGenomicRegion
+                        forwardTranscriptRegion,
+                        reverseTranscriptRegion,
+                        mutatedPositionsFw, // mutatedPositionsFw
+                        mutatedPositionsRw // mutatedPositionsRw
+                );
+                reads.add(read);
+                i++;
+            }
+        }
+        return reads;
     }
 }
