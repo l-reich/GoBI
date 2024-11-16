@@ -38,7 +38,7 @@ public class RSTest {
         genome.getGeneSequences(fastaFile, idxFile);
 
         RSGenome test = new RSGenome();
-        test.addGene("ENSG00000160767", genome.getGenes().get("ENSG00000160767"));
+        test.addGene("ENSG00000241978", genome.getGenes().get("ENSG00000241978 "));
         //test.addGene("ENSG00000232339", genome.getGenes().get("ENSG00000232339"));
 
 
